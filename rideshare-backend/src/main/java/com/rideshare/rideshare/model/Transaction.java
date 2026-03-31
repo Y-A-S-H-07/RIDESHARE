@@ -1,0 +1,42 @@
+package com.rideshare.rideshare.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@Entity
+@Table(name = "transactions")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class Transaction {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private double amount;
+
+    @Enumerated(EnumType.STRING)
+    private TransactionType type;
+
+    private String status;
+
+    // 🔥 who paid
+    @ManyToOne
+    @JoinColumn(name = "from_user_id")
+    @JsonIgnoreProperties({"password", "role"})
+    private User fromUser;
+
+    // 🔥 who received
+    @ManyToOne
+    @JoinColumn(name = "to_user_id")
+    @JsonIgnoreProperties({"password", "role"})
+    private User toUser;
+
+    @ManyToOne
+    @JoinColumn(name = "ride_id")
+    @JsonIgnoreProperties({"host", "driver"})
+    private Ride ride;
+}
