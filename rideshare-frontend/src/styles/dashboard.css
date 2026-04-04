@@ -72,3 +72,7 @@
   margin-top: 10px;
   max-width: 600px;
 }
+
+.button:hover {
+  background: #333;
+}

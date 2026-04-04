@@ -8,6 +8,7 @@ import com.rideshare.rideshare.service.AIService;
 import com.rideshare.rideshare.service.RideService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,6 +24,15 @@ public class RideController {
     @Autowired
     private AIService aiService;
 
+    @GetMapping("/estimate")
+    public double estimateFare(
+            @RequestParam String source,
+            @RequestParam String destination,
+            @RequestParam String vehicleType
+    ) {
+        return rideService.calculateEstimatedFare(source, destination, vehicleType);
+    }
+
     // 🔍 Search rides
     @GetMapping("/search")
     public List<Ride> searchRides(
@@ -34,8 +44,13 @@ public class RideController {
 
     // ➕ Create ride
     @PostMapping("/create")
-    public Ride createRide(@RequestBody Ride ride) {
-        return rideService.createRide(ride);
+    public ResponseEntity<?> createRide(@RequestBody Ride ride) {
+        try {
+            Ride createdRide = rideService.createRide(ride);
+            return ResponseEntity.ok(createdRide);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // 👥 Join ride
@@ -56,6 +71,8 @@ public class RideController {
         return rideService.getAvailableRides();
     }
 
+
+    
     // 🚗 Driver accepts ride
     @PostMapping("/accept")
     public Ride acceptRide(@RequestParam Long rideId, @RequestParam Long driverId) {
@@ -121,5 +138,11 @@ public class RideController {
     ) {
         List<Ride> rides = rideService.smartSearch(source, destination);
         return aiService.suggestRide(source, destination, rides);
+    }
+
+
+    @PostMapping("/arrived")
+    public Ride arrivedRide(@RequestParam Long rideId) {
+        return rideService.arrivedRide(rideId);
     }
 }

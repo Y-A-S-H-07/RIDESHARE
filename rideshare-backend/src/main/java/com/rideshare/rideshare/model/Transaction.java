@@ -2,7 +2,8 @@ package com.rideshare.rideshare.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-
+import org.hibernate.annotations.CreationTimestamp;
+import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
@@ -22,6 +23,10 @@ public class Transaction {
     private TransactionType type;
 
     private String status;
+
+    // ✅ Automatically set timestamp
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
     // 🔥 who paid
     @ManyToOne

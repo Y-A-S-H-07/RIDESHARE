@@ -57,4 +57,9 @@ public class UserService {
 
         return user;
     }
+
+    public Wallet getWallet(Long userId) {
+        return walletRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Wallet not found"));
+    }
 }

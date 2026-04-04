@@ -12,8 +12,8 @@ import java.util.*;
 @Service
 public class AIService {
 
-    private final String API_KEY = "AIzaSyC8Oz1fOMwwTV_i_j1a9bfDHp86SNvc4I0"; // 🔥 put NEW key here
-
+    @org.springframework.beans.factory.annotation.Value("${gemini.api.key}")
+    private String API_KEY;
     private final String URL =
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=";
     private final RestTemplate restTemplate = new RestTemplate();
