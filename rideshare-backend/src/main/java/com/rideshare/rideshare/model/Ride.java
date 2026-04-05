@@ -41,7 +41,7 @@ public class Ride {
     @JsonIgnoreProperties({"user"})
     private Driver driver;
 
-    // ✅ NEW PART
+    
     @OneToMany(mappedBy = "ride", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"ride"})
     private List<RideParticipant> participants;

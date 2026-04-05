@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import "../styles/dashboard.css";
 import Navbar from "../components/Navbar";
 
 function UserDashboard() {
@@ -9,14 +8,12 @@ function UserDashboard() {
 
   const [myRides, setMyRides] = useState([]);
 
-  // ✅ AUTH GUARD
   useEffect(() => {
     if (!user || user.role !== "USER") {
       navigate("/login");
     }
   }, []);
 
-  // ✅ Fetch my rides
   const fetchMyRides = async () => {
     try {
       const res = await fetch("http://localhost:8080/rides/all");
@@ -32,14 +29,10 @@ function UserDashboard() {
     }
   };
 
-  // ✅ Load on page start
   useEffect(() => {
     fetchMyRides();
   }, []);
 
-  
-
-  // ✅ Fetch requests
   const fetchRequests = async (rideId) => {
     try {
       const res = await fetch("http://localhost:8080/rides/all");
@@ -52,10 +45,7 @@ function UserDashboard() {
         (p) => p.status === "PENDING"
       );
 
-      const updatedRide = {
-        ...ride,
-        requests,
-      };
+      const updatedRide = { ...ride, requests };
 
       setMyRides((prev) =>
         prev.map((r) => (r.id === rideId ? updatedRide : r))
@@ -65,28 +55,24 @@ function UserDashboard() {
     }
   };
 
-  // ✅ Accept request
   const acceptRequest = async (rideId, userId) => {
     try {
       await fetch(
         `http://localhost:8080/rides/accept-request?rideId=${rideId}&userId=${userId}&hostId=${user.id}`,
         { method: "POST" }
       );
-
       fetchMyRides();
     } catch (err) {
       console.error("Error accepting request:", err);
     }
   };
 
-  // ✅ Reject request
   const rejectRequest = async (rideId, userId) => {
     try {
       await fetch(
         `http://localhost:8080/rides/reject-request?rideId=${rideId}&userId=${userId}&hostId=${user.id}`,
         { method: "POST" }
       );
-
       fetchMyRides();
     } catch (err) {
       console.error("Error rejecting request:", err);
@@ -97,95 +83,132 @@ function UserDashboard() {
     <>
       <Navbar />
 
-      <div className="container">
-        <h1 className="title">Welcome, {user.name}</h1>
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-4xl mx-auto px-4">
 
-        <p className="subtitle">
-          Easily create rides or find available rides shared by others.
-        </p>
+          {/* HEADER */}
+          <h1 className="text-4xl font-semibold text-gray-900 mb-2">
+            Welcome, {user.name}
+          </h1>
+          <p className="text-gray-500 mb-10">
+            Manage your rides smoothly
+          </p>
 
-        <div className="row" style={{ marginTop: 40 }}>
-          
-          <div className="card">
-            <h3>Create Ride</h3>
-            <button
-              className="button"
-              onClick={() => navigate("/create-ride")}
-            >
-              Go to Create Ride
-            </button>
-          </div>
+          {/* ACTIONS */}
+          <div className="grid md:grid-cols-3 gap-5 mb-12">
 
-          <div className="card">
-            <h3>Search Ride</h3>
-            <button
-              className="button"
-              onClick={() => navigate("/search-ride")}
-            >
-              Go to Search Ride
-            </button>
-          </div>
-
-          <div className="card">
-            <h3>Ride History</h3>
-            <button
-              className="button"
-              onClick={() => navigate("/history")}
-            >
-              View Ride History
-            </button>
-          </div>
-        </div>
-
-        <h3 style={{ marginTop: 40 }}>My Rides</h3>
-
-        {myRides.length === 0 ? (
-          <p>No rides created yet</p>
-        ) : (
-          myRides.map((ride) => (
-            <div key={ride.id} className="card">
-              <p>{ride.source} → {ride.destination}</p>
-              <p>Status: {ride.status}</p>
-
+            <div className="bg-white p-5 rounded-xl border hover:shadow-sm transition">
+              <h3 className="text-base font-medium mb-4 text-gray-700">
+                Create Ride
+              </h3>
               <button
-                className="button"
-                onClick={() => fetchRequests(ride.id)}
+                className="w-full py-2 rounded-md bg-gray-900 text-white hover:bg-black transition"
+                onClick={() => navigate("/create-ride")}
               >
-                View Requests
+                Open
               </button>
-
-              {ride.requests ? (
-                ride.requests.length > 0 ? (
-                  ride.requests.map((req) => (
-                    <div key={req.id} style={{ marginTop: 10 }}>
-                      <p>User ID: {req.user?.id}</p>
-
-                      <button
-                        className="button"
-                        onClick={() =>
-                          acceptRequest(ride.id, req.user.id)
-                        }
-                      >
-                        Accept
-                      </button>
-
-                      <button
-                        className="button"
-                        onClick={() =>
-                          rejectRequest(ride.id, req.user.id)
-                        }
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <p>No Requests Yet</p>
-                )
-              ) : null}
             </div>
-          ))
-        )}
+
+            <div className="bg-white p-5 rounded-xl border hover:shadow-sm transition">
+              <h3 className="text-base font-medium mb-4 text-gray-700">
+                Search Ride
+              </h3>
+              <button
+                className="w-full py-2 rounded-md bg-gray-900 text-white hover:bg-black transition"
+                onClick={() => navigate("/search-ride")}
+              >
+                Open
+              </button>
+            </div>
+
+            <div className="bg-white p-5 rounded-xl border hover:shadow-sm transition">
+              <h3 className="text-base font-medium mb-4 text-gray-700">
+                Ride History
+              </h3>
+              <button
+                className="w-full py-2 rounded-md bg-gray-900 text-white hover:bg-black transition"
+                onClick={() => navigate("/history")}
+              >
+                Open
+              </button>
+            </div>
+
+          </div>
+
+          {/* MY RIDES */}
+          <h2 className="text-xl font-semibold text-gray-800 mb-5">
+            My Rides
+          </h2>
+
+          {myRides.length === 0 ? (
+            <p className="text-gray-400">No rides yet</p>
+          ) : (
+            <div className="space-y-5">
+              {myRides.map((ride) => (
+                <div
+                  key={ride.id}
+                  className="bg-white p-5 rounded-xl border hover:shadow-sm transition"
+                >
+                  <div className="flex justify-between items-center">
+                    <p className="text-gray-900 font-medium">
+                      {ride.source} → {ride.destination}
+                    </p>
+                    <span className="text-xs bg-gray-100 px-3 py-1 rounded-full text-gray-600">
+                      {ride.status}
+                    </span>
+                  </div>
+
+                  <button
+                    className="mt-3 text-sm text-gray-700 underline hover:text-black"
+                    onClick={() => fetchRequests(ride.id)}
+                  >
+                    View Requests
+                  </button>
+
+                  {ride.requests && (
+                    <div className="mt-4 space-y-2">
+                      {ride.requests.length > 0 ? (
+                        ride.requests.map((req) => (
+                          <div
+                            key={req.id}
+                            className="flex justify-between items-center text-sm"
+                          >
+                            <p>User ID: {req.user?.id}</p>
+
+                            <div className="flex gap-2">
+                              <button
+                                className="px-3 py-1 border rounded hover:bg-gray-100"
+                                onClick={() =>
+                                  acceptRequest(ride.id, req.user.id)
+                                }
+                              >
+                                Accept
+                              </button>
+
+                              <button
+                                className="px-3 py-1 border rounded hover:bg-gray-100"
+                                onClick={() =>
+                                  rejectRequest(ride.id, req.user.id)
+                                }
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-gray-400 text-sm">
+                          No requests yet
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+        </div>
       </div>
     </>
   );

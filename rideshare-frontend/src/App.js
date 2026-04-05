@@ -11,28 +11,31 @@ import RideDetails from "./pages/RideDetails";
 import Notifications from "./pages/Notifications";
 import Wallet from "./pages/Wallet";
 import DriverRideDetails from "./pages/DriverRideDetails";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/wallet" element={<Wallet />} />
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/user-dashboard" element={<UserDashboard />} />
-        <Route path="/driver-dashboard" element={<DriverDashboard />} />
-        <Route path="/create-ride" element={<CreateRide />} />
-        <Route path="/search-ride" element={<SearchRide />} />
-        <Route path="/history" element={<History />} />
-        <Route path="/ride-details" element={<RideDetails />} />
-        <Route path="/notifications" element={<Notifications />} />
+    <>
+      {/* Toast container */}
+      <Toaster position="top-right" />
 
-        {/* ✅ ADD THIS */}
-        <Route path="/driver/ride/:rideId" element={<DriverRideDetails />} />
-
-      </Routes>
-    </BrowserRouter>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/wallet" element={<Wallet />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/user-dashboard" element={<UserDashboard />} />
+          <Route path="/driver-dashboard" element={<DriverDashboard />} />
+          <Route path="/create-ride" element={<CreateRide />} />
+          <Route path="/search-ride" element={<SearchRide />} />
+          <Route path="/history" element={<History />} />
+          <Route path="/ride-details" element={<RideDetails />} />
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/driver/ride/:rideId" element={<DriverRideDetails />} />
+        </Routes>
+      </BrowserRouter>
+    </>
   );
 }
 

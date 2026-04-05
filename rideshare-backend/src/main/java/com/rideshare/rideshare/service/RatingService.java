@@ -22,7 +22,7 @@ public class RatingService {
 
         Ride ride = rideRepository.findById(rideId).orElseThrow();
 
-        // ❌ allow only after ride completed
+        //allow only after ride completed
         if (ride.getStatus() != RideStatus.COMPLETED) {
             throw new RuntimeException("Cannot rate before ride completion");
         }
@@ -30,12 +30,12 @@ public class RatingService {
         User fromUser = userRepository.findById(fromUserId).orElseThrow();
         User toUser = userRepository.findById(toUserId).orElseThrow();
 
-        // ❌ prevent self rating
+        //prevent self rating
         if (fromUserId.equals(toUserId)) {
             throw new RuntimeException("You cannot rate yourself");
         }
 
-        // ❌ score validation
+        // score validation
         if (score < 1 || score > 5) {
             throw new RuntimeException("Rating must be between 1 and 5");
         }

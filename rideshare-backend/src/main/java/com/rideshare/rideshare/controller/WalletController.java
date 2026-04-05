@@ -39,6 +39,8 @@ public class WalletController {
         wallet.setBalance(wallet.getBalance() + request.getAmount());
         walletRepository.save(wallet);
 
+
+        
         // create transaction
         User user = userRepository.findById(request.getUserId()).orElseThrow();
 

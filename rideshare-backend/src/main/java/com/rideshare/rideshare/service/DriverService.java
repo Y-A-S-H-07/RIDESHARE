@@ -27,7 +27,7 @@ public class DriverService {
 
     public Driver registerDriver(DriverRegistrationRequest request) {
 
-        // 🔥 check duplicate email
+        // check duplicate email
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email already registered");
         }
@@ -50,7 +50,7 @@ public class DriverService {
 
         Driver savedDriver = driverRepository.save(driver);
 
-        // 🔥 CREATE WALLET FOR DRIVER
+       // create wallete for driver
         Wallet wallet = new Wallet();
         wallet.setUser(user);
         wallet.setBalance(0.0);

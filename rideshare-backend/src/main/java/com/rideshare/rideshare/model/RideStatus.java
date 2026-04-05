@@ -3,7 +3,7 @@ package com.rideshare.rideshare.model;
 public enum RideStatus {
     CREATED,
     ACCEPTED,
-    ARRIVED,   // ✅ ADD THIS
+    ARRIVED,   
     STARTED,
     COMPLETED,
     CANCELLED

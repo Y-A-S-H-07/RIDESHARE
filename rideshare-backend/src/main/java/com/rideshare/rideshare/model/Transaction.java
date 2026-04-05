@@ -24,17 +24,17 @@ public class Transaction {
 
     private String status;
 
-    // ✅ Automatically set timestamp
+    // automatically set timestamp
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    // 🔥 who paid
+    // who paid
     @ManyToOne
     @JoinColumn(name = "from_user_id")
     @JsonIgnoreProperties({"password", "role"})
     private User fromUser;
 
-    // 🔥 who received
+    //who received
     @ManyToOne
     @JoinColumn(name = "to_user_id")
     @JsonIgnoreProperties({"password", "role"})

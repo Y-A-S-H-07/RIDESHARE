@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
-import "../styles/dashboard.css";
+import toast from "react-hot-toast";
 
 function Wallet() {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -8,6 +8,7 @@ function Wallet() {
   const [amount, setAmount] = useState("");
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchWallet = async () => {
     const res = await fetch(
@@ -28,13 +29,14 @@ function Wallet() {
   useEffect(() => {
     fetchWallet();
     fetchTransactions();
+    setLoading(false);
   }, []);
 
   const addMoney = async (customAmount) => {
     const finalAmount = customAmount || amount;
 
     if (!finalAmount || finalAmount <= 0) {
-      alert("Enter valid amount");
+      toast.error("Enter valid amount");
       return;
     }
 
@@ -49,7 +51,7 @@ function Wallet() {
       })
     });
 
-    alert("Money added");
+    toast.success("Money added");
 
     setAmount("");
     fetchWallet();
@@ -62,99 +64,104 @@ function Wallet() {
     <>
       <Navbar />
 
-      <div className="container">
-        <h2 style={{ fontSize: "32px", marginBottom: 20 }}>Wallet</h2>
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-3xl mx-auto px-4 space-y-6">
 
-        {/* 💰 BALANCE CARD */}
-        <div
-        className="card"
-        style={{
-            textAlign: "center",
-            background: "#000",
-            color: "#fff",
-            maxWidth: "300px",
-            margin: "0 auto",
-            padding: "20px"
-        }}
-        >
-          <h3>Available Balance</h3>
-          <h1 style={{ fontSize: 32, marginTop: 10 }}>₹{balance}</h1>
-        </div>
+          {/* TITLE */}
+          <h1 className="text-3xl font-semibold text-gray-900">
+            Wallet
+          </h1>
 
-        {/* ➕ ADD MONEY */}
-        <div className="card">
-          <h3>Add Money</h3>
+          {/* BALANCE CARD */}
+          <div className="bg-black text-white p-6 rounded-xl text-center">
+            <p className="text-sm text-gray-300">Available Balance</p>
+            <h2 className="text-3xl font-semibold mt-2">
+              ₹{Number(balance).toFixed(2)}
+            </h2>
+          </div>
 
-          <input
-            className="input"
-            type="number"
-            placeholder="Enter amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
+          {/* ADD MONEY */}
+          <div className="bg-white p-5 rounded-xl border space-y-4">
+            <h3 className="font-medium text-gray-900">Add Money</h3>
 
-          {/* 🔥 QUICK BUTTONS */}
-          <div style={{ marginTop: 10 }}>
-            <button onClick={() => addMoney(100)}>₹100</button>
-            <button onClick={() => addMoney(500)} style={{ marginLeft: 10 }}>
-              ₹500
-            </button>
-            <button onClick={() => addMoney(1000)} style={{ marginLeft: 10 }}>
-              ₹1000
+            <input
+              className="w-full border rounded-md px-3 py-2 text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400"
+              type="number"
+              placeholder="Enter amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+
+            {/* QUICK BUTTONS */}
+            <div className="flex gap-2">
+              {[100, 500, 1000].map((amt) => (
+                <button
+                  key={amt}
+                  onClick={() => addMoney(amt)}
+                  className="px-3 py-1 border rounded-md text-sm hover:bg-gray-100 active:scale-95"
+                >
+                  ₹{amt}
+                </button>
+              ))}
+            </div>
+
+            <button
+              className="w-full bg-gray-900 text-white py-2 rounded-md hover:bg-black transition active:scale-95"
+              onClick={() => addMoney()}
+            >
+              Add Money
             </button>
           </div>
 
-          <button
-            className="button"
-            style={{ marginTop: 10 }}
-            onClick={() => addMoney()}
-          >
-            Add Money
-          </button>
-        </div>
+          {/* TRANSACTIONS */}
+          <div className="bg-white p-5 rounded-xl border">
+            <h3 className="font-medium text-gray-900 mb-4">
+              Transaction History
+            </h3>
 
-        {/* 📜 TRANSACTIONS */}
-        <div className="card">
-          <h3>Transaction History</h3>
+            {transactions.length === 0 && (
+              <p className="text-gray-400 text-sm">
+                No transactions yet
+              </p>
+            )}
 
-          {transactions.length === 0 && <p>No transactions yet</p>}
+            <div className="space-y-3">
+              {transactions.map((t) => (
+                <div
+                  key={t.id}
+                  className="flex justify-between items-center p-3 bg-gray-50 rounded-md"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">
+                      {isCredit(t) ? "Received" : "Paid"} ({t.type})
+                    </p>
 
-          {transactions.map((t) => (
-            <div
-              key={t.id}
-              style={{
-                marginTop: 10,
-                padding: 10,
-                borderRadius: 10,
-                background: "#f9f9f9",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
-              }}
-            >
-              <div>
-                <p style={{ margin: 0 }}>
-                {isCredit(t) ? "Received" : "Paid"} ({t.type})
-                </p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(t.createdAt).toLocaleString()}
+                    </p>
 
-                <p style={{ fontSize: 12, color: "#666" }}>
-                {new Date(t.createdAt).toLocaleString()}
-                </p>
+                    {t.ride && (
+                      <p className="text-xs text-gray-400">
+                        Ride ID: {t.ride.id}
+                      </p>
+                    )}
+                  </div>
 
-                {t.ride && (
-                  <p style={{ fontSize: 12 }}>Ride ID: {t.ride.id}</p>
-                )}
-              </div>
-
-              <h4
-                style={{
-                  color: isCredit(t) ? "green" : "red"
-                }}
-              >
-                {isCredit(t) ? "+" : "-"} ₹{t.amount}
-              </h4>
+                  <p
+                    className={`text-sm font-medium ${
+                      isCredit(t)
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {isCredit(t) ? "+" : "-"} ₹
+                    {Number(t.amount).toFixed(2)}
+                  </p>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+
         </div>
       </div>
     </>

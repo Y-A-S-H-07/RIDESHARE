@@ -13,8 +13,7 @@ public class PaymentController {
     @Autowired
     private PaymentService paymentService;
 
-    // ✅ ADVANCE (User → Driver)
-    @PostMapping("/advance")
+   
     public Transaction payAdvance(@RequestBody Transaction request) {
         return paymentService.payAdvance(
                 request.getFromUser(),
@@ -22,7 +21,7 @@ public class PaymentController {
         );
     }
 
-    // ✅ FINAL (User → Host)
+   
     @PostMapping("/final")
     public Transaction payFinal(@RequestBody Transaction request) {
         return paymentService.payFinal(
@@ -31,7 +30,7 @@ public class PaymentController {
         );
     }
 
-    // ✅ HOST → DRIVER
+   
     @PostMapping("/pay-driver")
     public Transaction payDriver(@RequestBody Transaction request) {
         return paymentService.payDriver(

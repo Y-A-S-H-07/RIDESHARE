@@ -3,6 +3,7 @@ package com.rideshare.rideshare.service;
 import java.util.List;
 
 import com.rideshare.rideshare.model.*;
+
 import com.rideshare.rideshare.repository.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,9 @@ import java.util.Map;
 
 @Service
 public class RideService {
+
+    @Autowired
+    private TransactionRepository transactionRepository;
 
     @Autowired
     private RideRepository rideRepository;
@@ -144,7 +148,7 @@ public class RideService {
       
         Notification notification = new Notification();
         notification.setUser(ride.getHost());
-        notification.setMessage("New join request from user " + user.getName());
+        notification.setMessage("New join request from User ID " + user.getId());
 
         notificationRepository.save(notification);
 
@@ -256,24 +260,20 @@ public class RideService {
             throw new RuntimeException("Ride must be STARTED first");
         }
 
-        // ✅ mark completed
+        // mark completed
         ride.setStatus(RideStatus.COMPLETED);
         rideRepository.save(ride);
 
-        // 🔥 AUTO PAYMENT STARTS
-
         List<RideParticipant> participants = participantRepository.findByRideId(rideId);
 
-        int totalUsers = participants.size() + 1; // + host
-
+        int totalUsers = participants.size() + 1;
         double perUserAmount = ride.getTotalFare() / totalUsers;
 
-        // 🔻 deduct from joiners
+        // 🔻 participants pay
         for (RideParticipant p : participants) {
 
             User user = p.getUser();
-            Wallet wallet = walletRepository.findByUserId(user.getId())
-                    .orElseThrow(() -> new RuntimeException("Wallet not found"));
+            Wallet wallet = walletRepository.findByUserId(user.getId()).orElseThrow();
 
             if (wallet.getBalance() < perUserAmount) {
                 throw new RuntimeException("User " + user.getId() + " has insufficient balance");
@@ -281,12 +281,22 @@ public class RideService {
 
             wallet.setBalance(wallet.getBalance() - perUserAmount);
             walletRepository.save(wallet);
+
+            // ✅ transaction
+            Transaction tx = new Transaction();
+            tx.setFromUser(user);
+            tx.setToUser(ride.getDriver().getUser());
+            tx.setAmount(perUserAmount);
+            tx.setType(TransactionType.FINAL);
+            tx.setRide(ride);
+            tx.setStatus("SUCCESS");
+
+            transactionRepository.save(tx);
         }
 
-        // 🔻 deduct from host
+        // 🔻 host pays
         User host = ride.getHost();
-        Wallet hostWallet = walletRepository.findByUserId(host.getId())
-                .orElseThrow(() -> new RuntimeException("Host wallet not found"));
+        Wallet hostWallet = walletRepository.findByUserId(host.getId()).orElseThrow();
 
         if (hostWallet.getBalance() < perUserAmount) {
             throw new RuntimeException("Host has insufficient balance");
@@ -295,26 +305,45 @@ public class RideService {
         hostWallet.setBalance(hostWallet.getBalance() - perUserAmount);
         walletRepository.save(hostWallet);
 
-        // 🔺 pay driver full amount
+        Transaction hostTx = new Transaction();
+        hostTx.setFromUser(host);
+        hostTx.setToUser(ride.getDriver().getUser());
+        hostTx.setAmount(perUserAmount);
+        hostTx.setType(TransactionType.FINAL);
+        hostTx.setRide(ride);
+        hostTx.setStatus("SUCCESS");
+
+        transactionRepository.save(hostTx);
+
+        // 🔺 driver receives
         Wallet driverWallet = walletRepository
                 .findByUserId(ride.getDriver().getUser().getId())
-                .orElseThrow(() -> new RuntimeException("Driver wallet not found"));
+                .orElseThrow();
 
         driverWallet.setBalance(driverWallet.getBalance() + ride.getTotalFare());
         walletRepository.save(driverWallet);
 
-        // 🔔 notify accepted participants
+        Transaction driverTx = new Transaction();
+        driverTx.setFromUser(null);
+        driverTx.setToUser(ride.getDriver().getUser());
+        driverTx.setAmount(ride.getTotalFare());
+        driverTx.setType(TransactionType.FINAL);
+        driverTx.setRide(ride);
+        driverTx.setStatus("SUCCESS");
+
+        transactionRepository.save(driverTx);
+
+        // 🔔 notifications
         for (RideParticipant p : participants) {
             if (p.getStatus() == RequestStatus.ACCEPTED) {
                 Notification n = new Notification();
                 n.setUser(p.getUser());
                 n.setMessage("Ride completed: " 
-                        + ride.getSource() + " → " + ride.getDestination());
+                    + ride.getSource() + " → " + ride.getDestination());
                 notificationRepository.save(n);
             }
         }
 
-        // 🔔 notify host separately
         Notification hostN = new Notification();
         hostN.setUser(ride.getHost());
         hostN.setMessage("Your ride has been completed");
@@ -415,6 +444,14 @@ public class RideService {
 
         notificationRepository.save(notification);
 
+
+
+        Notification hostN = new Notification();
+        hostN.setUser(ride.getHost());
+        hostN.setMessage("You accepted a user for ride from "
+            + ride.getSource() + " → " + ride.getDestination());
+        notificationRepository.save(hostN);
+
         return "Request accepted";
     }
 
@@ -487,6 +524,8 @@ public class RideService {
     private String getCoordinates(String city) {
 
         try {
+
+            city = city.split(",")[0].trim();
             String url = "https://nominatim.openstreetmap.org/search?q="
                     + city + "&format=json&limit=1";
 
@@ -543,21 +582,21 @@ public class RideService {
 
         int score = 0;
 
-        // 1️⃣ Exact source match
+        // exact source match
         if (ride.getSource().equalsIgnoreCase(userSource)) {
             score += 50;
         }
 
-        // 2️⃣ Partial match (simple AI trick)
+        // partial match (simple AI trick)
         else if (ride.getSource().toLowerCase().contains(userSource.toLowerCase())
                 || userSource.toLowerCase().contains(ride.getSource().toLowerCase())) {
             score += 30;
         }
 
-        // 3️⃣ More available seats = better
+        // more available seats = better
         score += ride.getAvailableSeats() * 5;
 
-        // 4️⃣ Shorter distance (optional tweak)
+        // shorter distance
         if (ride.getDistance() < 100) {
             score += 10;
         }

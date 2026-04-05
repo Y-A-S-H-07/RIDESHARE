@@ -29,7 +29,9 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
 
-        // 🔥 CREATE WALLET
+        // create wallete
+
+
         Wallet wallet = new Wallet();
         wallet.setUser(savedUser);
         wallet.setBalance(0.0);

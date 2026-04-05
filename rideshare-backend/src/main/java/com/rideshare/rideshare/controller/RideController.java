@@ -53,19 +53,19 @@ public class RideController {
         }
     }
 
-    // 👥 Join ride
+    // join ride
     @PostMapping("/join")
     public String joinRide(@RequestParam Long rideId, @RequestBody User user) {
         return rideService.joinRide(rideId, user);
     }
 
-    // 📋 Get all rides
+    // get all rides
     @GetMapping("/all")
     public List<Ride> getAllRides() {
         return rideService.getAllRides();
     }
 
-    // ✅ Available rides
+    // available rides
     @GetMapping("/available")
     public List<Ride> getAvailableRides() {
         return rideService.getAvailableRides();
@@ -73,7 +73,7 @@ public class RideController {
 
 
     
-    // 🚗 Driver accepts ride
+    // driver accepts ride
     @PostMapping("/accept")
     public Ride acceptRide(@RequestParam Long rideId, @RequestParam Long driverId) {
         return rideService.acceptRide(rideId, driverId);

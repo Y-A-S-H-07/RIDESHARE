@@ -10,7 +10,7 @@ import com.rideshare.rideshare.repository.RideRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List; // ✅ IMPORTANT FIX
+import java.util.List; 
 
 @Service
 public class PaymentService {
@@ -30,7 +30,6 @@ public class PaymentService {
     @Autowired
     private RideParticipantRepository participantRepository;
 
-    // ❌ OLD METHODS (kept but not needed now)
     public Transaction payAdvance(User user, Ride rideRequest) {
         throw new RuntimeException("Advance payment not supported in new flow");
     }
@@ -43,7 +42,6 @@ public class PaymentService {
         throw new RuntimeException("Manual driver payment not supported in new flow");
     }
 
-    // ✅ NEW FINAL PAYMENT LOGIC
     public String completeRidePayment(Long rideId) {
         return "Payment handled automatically during ride completion";
     }

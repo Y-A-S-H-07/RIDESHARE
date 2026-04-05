@@ -1,25 +1,30 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { FaBell, FaWallet } from "react-icons/fa";
 
 function Navbar() {
+
+  const playSound = () => {
+    const audio = new Audio("/notification.mp3");
+    audio.play();
+  };
+
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
   const [balance, setBalance] = useState(0);
   const [notifications, setNotifications] = useState([]);
-
   const [showSidebar, setShowSidebar] = useState(false);
+  const [unseenCount, setUnseenCount] = useState(0);
 
   const logout = () => {
     localStorage.removeItem("user");
     navigate("/login");
   };
 
-  // ✅ Fetch wallet
+  // Wallet
   useEffect(() => {
-    if (user) {
-      fetchWallet();
-    }
+    if (user) fetchWallet();
   }, []);
 
   const fetchWallet = async () => {
@@ -34,12 +39,11 @@ function Navbar() {
     }
   };
 
-  // ✅ Notifications polling
+  // Notifications
   useEffect(() => {
     if (!user) return;
 
     fetchNotifications();
-
     const interval = setInterval(fetchNotifications, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -52,121 +56,131 @@ function Navbar() {
 
       const data = await res.json();
 
-      // ✅ show all notifications in console (no alert bug)
-      data.forEach((n) => {
-        console.log("Notification:", n.message);
-      });
+      const storedCount = Number(localStorage.getItem("lastCount") || 0);
 
-      setNotifications(data);
+      // 🔔 play sound only for new ones
+      if (data.length > storedCount) {
+        playSound();
+      }
+
+      // ✅ calculate unseen count
+      setUnseenCount(data.length - storedCount);
+
+      setNotifications([...data].reverse());
     } catch (err) {
       console.error("Notification error:", err);
     }
   };
 
-  // ✅ Unread count
-  const unseenCount = notifications.length;
+  // 👉 mark as read when opening
+  const openNotifications = () => {
+    setShowSidebar(true);
+    localStorage.setItem("lastCount", notifications.length);
+    setUnseenCount(0);
+  };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "15px 30px",
-        borderBottom: "1px solid #ddd",
-      }}
-    >
-      <h2 style={{ cursor: "pointer" }} onClick={() => navigate("/")}>
-        RideShare
-      </h2>
+    <>
+      {/* NAVBAR */}
+      <div className="w-full bg-white border-b">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
 
-      {user && (
-        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-          
-          {/* User + Wallet */}
-          <span>
-            {user.name} ({user.role}) | ₹{balance}
-          </span>
-
-          {/* Wallet */}
-          <button onClick={() => navigate("/wallet")}>
-            Wallet
-          </button>
-
-          {/* Notifications */}
-          <button
-            onClick={() => {
-              setShowSidebar(true);
-            }}
+          {/* LEFT */}
+          <h2
+            className="text-lg font-semibold text-gray-900 cursor-pointer"
+            onClick={() => navigate("/")}
           >
-            {unseenCount > 0
-              ? `Notifications (${unseenCount})`
-              : "Notifications"}
-          </button>
+            RideShare
+          </h2>
 
-          {/* Logout */}
-          <button onClick={logout}>
-            Logout
-          </button>
+          {/* RIGHT */}
+          {user && (
+            <div className="flex items-center gap-6 text-sm text-gray-700">
+
+              {/* USER */}
+              <span className="text-gray-500">
+                {user.name} ({user.role}) • ₹{Number(balance).toFixed(2)}
+              </span>
+
+              {/* WALLET */}
+              <button
+                className="flex items-center gap-2 hover:text-black transition"
+                onClick={() => navigate("/wallet")}
+              >
+                <FaWallet />
+                Wallet
+              </button>
+
+              {/* NOTIFICATIONS */}
+              <button
+                className="relative flex items-center gap-2 hover:text-black transition"
+                onClick={openNotifications}
+              >
+                <FaBell />
+                Notifications
+
+                {unseenCount > 0 && (
+                  <span className="absolute -top-2 -right-3 bg-black text-white text-xs px-2 py-0.5 rounded-full">
+                    {unseenCount}
+                  </span>
+                )}
+              </button>
+
+              {/* LOGOUT */}
+              <button
+                className="hover:text-black transition"
+                onClick={logout}
+              >
+                Logout
+              </button>
+
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
+      {/* BACKDROP */}
       {showSidebar && (
         <div
           onClick={() => setShowSidebar(false)}
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            background: "rgba(0,0,0,0.3)"
-          }}
+          className="fixed inset-0 bg-black/30"
         />
       )}
 
+      {/* SIDEBAR */}
       {showSidebar && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            right: 0,
-            width: "300px",
-            height: "100%",
-            background: "#fff",
-            boxShadow: "-2px 0 10px rgba(0,0,0,0.2)",
-            padding: "20px",
-            overflowY: "auto",
-            zIndex: 1000
-          }}
-        >
-          <h3>Notifications</h3>
+        <div className="fixed top-0 right-0 w-80 h-full bg-white shadow-lg p-5 overflow-y-auto z-50">
+
+          <h3 className="text-lg font-semibold mb-4">Notifications</h3>
 
           <button
             onClick={() => setShowSidebar(false)}
-            style={{ marginBottom: 10 }}
+            className="mb-4 text-sm text-gray-500 hover:text-black"
           >
             Close
           </button>
 
-          {notifications.length === 0 && <p>No notifications</p>}
+          {notifications.length === 0 && (
+            <p className="text-gray-400">No notifications</p>
+          )}
 
-          {notifications.map((n) => (
-            <div
-              key={n.id}
-              style={{
-                padding: "10px",
-                marginBottom: "10px",
-                background: "#f5f5f5",
-                borderRadius: "6px"
-              }}
-            >
-              {n.message}
-            </div>
-          ))}
+          <div className="space-y-3">
+            {notifications.map((n) => (
+              <div
+                key={n.id}
+                className="p-3 bg-gray-100 rounded-lg"
+              >
+                <p className="text-sm">{n.message}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {new Date(n.createdAt).toLocaleString()}
+                </p>
+              </div>
+            ))}
+          </div>
+
         </div>
       )}
-    </div>
+    </>
   );
 }
 

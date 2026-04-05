@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import toast from "react-hot-toast";
 
 function DriverRideDetails() {
   const { rideId } = useParams();
@@ -7,12 +9,20 @@ function DriverRideDetails() {
 
   const [ride, setRide] = useState(null);
 
+  // fetch ride details
   const fetchRide = async () => {
-    const res = await fetch("http://localhost:8080/rides/all");
-    const data = await res.json();
+    try {
+      const res = await fetch("http://localhost:8080/rides/all");
+      const data = await res.json();
 
-    const currentRide = data.find((r) => r.id === parseInt(rideId));
-    setRide(currentRide);
+      const currentRide = data.find(
+        (r) => r.id === parseInt(rideId)
+      );
+
+      setRide(currentRide);
+    } catch (err) {
+      toast.error("Failed to load ride");
+    }
   };
 
   useEffect(() => {
@@ -23,6 +33,7 @@ function DriverRideDetails() {
     await fetch(`http://localhost:8080/rides/arrived?rideId=${rideId}`, {
       method: "POST",
     });
+    toast.success("Arrived at pickup");
     fetchRide();
   };
 
@@ -30,6 +41,7 @@ function DriverRideDetails() {
     await fetch(`http://localhost:8080/rides/start?rideId=${rideId}`, {
       method: "POST",
     });
+    toast.success("Ride started");
     fetchRide();
   };
 
@@ -37,91 +49,101 @@ function DriverRideDetails() {
     await fetch(`http://localhost:8080/rides/complete?rideId=${rideId}`, {
       method: "POST",
     });
+    toast.success("Ride completed");
     fetchRide();
   };
 
-  if (!ride) return <p style={{ padding: 20 }}>Loading...</p>;
+  if (!ride) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen flex justify-center items-center">
+          <div className="w-6 h-6 border-2 border-gray-300 border-t-black rounded-full animate-spin"></div>
+        </div>
+      </>
+    );
+  }
 
   return (
-    <div style={{ padding: "30px", background: "#f5f6fa", minHeight: "100vh" }}>
-      
-      {/* Top Bar */}
-      <div style={{ marginBottom: "20px" }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            padding: "8px 16px",
-            border: "none",
-            backgroundColor: "#2f80ed",
-            color: "white",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: "500"
-          }}
-        >
-          ← Back
-        </button>
-      </div>
+    <>
+      <Navbar />
 
-      {/* Card */}
-      <div
-        style={{
-          maxWidth: "500px",
-          margin: "auto",
-          background: "white",
-          padding: "25px",
-          borderRadius: "12px",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-        }}
-      >
-        <h2 style={{ marginBottom: "20px" }}>Ride Details</h2>
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-xl mx-auto px-4">
 
-        <p><b>Source:</b> {ride.source}</p>
-        <p><b>Destination:</b> {ride.destination}</p>
-        <p><b>Status:</b> {ride.status}</p>
-        <p><b>Fare:</b> ₹{ride.totalFare}</p>
+          {/* back */}
+          <button
+            onClick={() => navigate(-1)}
+            className="mb-6 text-sm text-gray-500 hover:text-black"
+          >
+            ← Back
+          </button>
 
-        <div style={{ marginTop: "25px" }}>
-          {ride.status === "ACCEPTED" && (
-            <button
-              onClick={arrived}
-              style={btnStyle}
-            >
-              Arrived
-            </button>
-          )}
+          {/* ride info */}
+          <div className="bg-white p-6 rounded-xl border space-y-4">
 
-          {ride.status === "ARRIVED" && (
-            <button
-              onClick={startRide}
-              style={btnStyle}
-            >
-              Start Ride
-            </button>
-          )}
+            <h2 className="text-xl font-semibold text-gray-900">
+              Ride Details
+            </h2>
 
-          {ride.status === "STARTED" && (
-            <button
-              onClick={completeRide}
-              style={{ ...btnStyle, backgroundColor: "#27ae60" }}
-            >
-              End Ride
-            </button>
-          )}
+            <div className="flex justify-between">
+              <span className="text-gray-500">Route</span>
+              <span className="font-medium">
+                {ride.source} → {ride.destination}
+              </span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-500">Status</span>
+              <span className="px-3 py-1 bg-gray-100 rounded-full text-sm">
+                {ride.status}
+              </span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-500">Fare</span>
+              <span className="font-medium">
+                ₹{ride.totalFare?.toFixed(2)}
+              </span>
+            </div>
+
+            {/* actions */}
+            <div className="pt-4">
+
+              {ride.status === "ACCEPTED" && (
+                <button
+                  onClick={arrived}
+                  className="w-full bg-gray-900 text-white py-2 rounded-md hover:bg-black transition active:scale-95"
+                >
+                  Arrived
+                </button>
+              )}
+
+              {ride.status === "ARRIVED" && (
+                <button
+                  onClick={startRide}
+                  className="w-full bg-gray-900 text-white py-2 rounded-md hover:bg-black transition active:scale-95"
+                >
+                  Start Ride
+                </button>
+              )}
+
+              {ride.status === "STARTED" && (
+                <button
+                  onClick={completeRide}
+                  className="w-full bg-gray-900 text-white py-2 rounded-md hover:bg-black transition active:scale-95"
+                >
+                  Complete Ride
+                </button>
+              )}
+
+            </div>
+
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
-
-const btnStyle = {
-  padding: "10px 18px",
-  border: "none",
-  backgroundColor: "#f2994a",
-  color: "white",
-  borderRadius: "6px",
-  cursor: "pointer",
-  fontWeight: "500"
-};
 
 export default DriverRideDetails;
