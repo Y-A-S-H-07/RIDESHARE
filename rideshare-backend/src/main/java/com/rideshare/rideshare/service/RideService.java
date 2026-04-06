@@ -38,17 +38,20 @@ public class RideService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    // 🔍 SEARCH RIDES
+    
     public List<Ride> searchRides(String source, String destination) {
-        return rideRepository
-                .findBySourceIgnoreCaseAndDestinationIgnoreCaseAndStatus(
-                        source,
-                        destination,
-                        RideStatus.CREATED
-                );
-    }
 
-    // ✅ CREATE RIDE
+    source = source.split(",")[0].trim();
+    destination = destination.split(",")[0].trim();
+
+    System.out.println("Searching: " + source + " → " + destination);
+
+    return rideRepository.searchFlexible(
+            source,
+            destination,
+            RideStatus.CREATED
+    );
+}
     public Ride createRide(Ride ride) {
 
         int totalSeats = getSeatsFromVehicleType(ride.getVehicleType());
@@ -66,11 +69,9 @@ public class RideService {
             throw new RuntimeException("Host is required");
         }
 
-        // ✅ fetch host FIRST
         User host = userRepository.findById(ride.getHost().getId()).orElseThrow();
         ride.setHost(host);
 
-        // ✅ ADD CHECK HERE (CORRECT PLACE)
         boolean hasActiveRide = rideRepository.existsByHostIdAndStatusIn(
                 host.getId(),
                 java.util.Arrays.asList(
@@ -97,7 +98,6 @@ public class RideService {
         return rideRepository.save(ride);
     }
 
-    // 🔧 VEHICLE TYPE LOGIC
     private int getSeatsFromVehicleType(String vehicleType) {
         if (vehicleType == null) return 4;
 
@@ -112,7 +112,6 @@ public class RideService {
         }
     }
 
-    // ✅ JOIN RIDE
     public String joinRide(Long rideId, User user) {
 
         Ride ride = rideRepository.findById(rideId).orElseThrow();
@@ -125,7 +124,6 @@ public class RideService {
             return "Already requested this ride";
         }
 
-        // 🔥 wallet check
         double minRequired = ride.getTotalFare() / 2.0;
         Wallet wallet = walletRepository.findByUserId(user.getId()).orElseThrow();
 
@@ -137,7 +135,6 @@ public class RideService {
             return "No seats available";
         }
 
-        // ✅ create request (NOT joining yet)
         RideParticipant participant = new RideParticipant();
         participant.setRide(ride);
         participant.setUser(user);
@@ -162,19 +159,15 @@ public class RideService {
         return "Request sent. Waiting for host approval.";
     }
 
-    // ✅ GET ALL RIDES
     public List<Ride> getAllRides() {
         return rideRepository.findAll();
     }
 
-    // ✅ AVAILABLE RIDES
     public List<Ride> getAvailableRides() {
         return rideRepository.findByAvailableSeatsGreaterThanAndStatus(0, RideStatus.CREATED);
     }
 
-    // ✅ ACCEPT RIDE
     public Ride acceptRide(Long rideId, Long driverId) {
-        // ❌ prevent multiple active rides
         boolean hasActiveRide = rideRepository.existsByDriverIdAndStatusIn(
                 driverId,
                 java.util.Arrays.asList(RideStatus.ACCEPTED, RideStatus.STARTED)
@@ -214,7 +207,6 @@ public class RideService {
         return rideRepository.save(ride);
     }
 
-    // ✅ START RIDE
     public Ride startRide(Long rideId) {
 
         Ride ride = rideRepository.findById(rideId)
@@ -250,7 +242,6 @@ public class RideService {
 
         return rideRepository.save(ride);
     }
-    // ✅ COMPLETE RIDE
    public Ride completeRide(Long rideId) {
 
         Ride ride = rideRepository.findById(rideId)
@@ -269,7 +260,6 @@ public class RideService {
         int totalUsers = participants.size() + 1;
         double perUserAmount = ride.getTotalFare() / totalUsers;
 
-        // 🔻 participants pay
         for (RideParticipant p : participants) {
 
             User user = p.getUser();
@@ -282,7 +272,7 @@ public class RideService {
             wallet.setBalance(wallet.getBalance() - perUserAmount);
             walletRepository.save(wallet);
 
-            // ✅ transaction
+            //  transaction
             Transaction tx = new Transaction();
             tx.setFromUser(user);
             tx.setToUser(ride.getDriver().getUser());
@@ -294,7 +284,7 @@ public class RideService {
             transactionRepository.save(tx);
         }
 
-        // 🔻 host pays
+        //  host pays
         User host = ride.getHost();
         Wallet hostWallet = walletRepository.findByUserId(host.getId()).orElseThrow();
 
@@ -315,7 +305,7 @@ public class RideService {
 
         transactionRepository.save(hostTx);
 
-        // 🔺 driver receives
+        // driver receives
         Wallet driverWallet = walletRepository
                 .findByUserId(ride.getDriver().getUser().getId())
                 .orElseThrow();
@@ -333,7 +323,7 @@ public class RideService {
 
         transactionRepository.save(driverTx);
 
-        // 🔔 notifications
+        //  notifications
         for (RideParticipant p : participants) {
             if (p.getStatus() == RequestStatus.ACCEPTED) {
                 Notification n = new Notification();
@@ -379,7 +369,7 @@ public class RideService {
 
         Ride ride = rideRepository.findById(rideId).orElseThrow();
 
-        // ❌ cannot leave after start
+        //  cannot leave after start
         if (ride.getStatus() != RideStatus.CREATED && ride.getStatus() != RideStatus.ACCEPTED) {
             return "Cannot leave ride after it has started";
         }
@@ -391,10 +381,10 @@ public class RideService {
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("User not part of this ride"));
 
-        // ✅ delete ONCE
+        //  delete ONCE
         participantRepository.delete(participant);
 
-        // ✅ increase seat
+        //  increase seat
         ride.setAvailableSeats(ride.getAvailableSeats() + 1);
         rideRepository.save(ride);
 
@@ -428,7 +418,7 @@ public class RideService {
             return "Request already processed";
         }
 
-        // ✅ accept
+        //  accept
         participant.setStatus(RequestStatus.ACCEPTED);
         participantRepository.save(participant);
 
@@ -662,4 +652,6 @@ public class RideService {
 
         return rideRepository.save(ride);
     }
+
+    
 }

@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import "../styles/dashboard.css";
 
 function Notifications() {
+  const API = process.env.REACT_APP_API_URL;
   const user = JSON.parse(localStorage.getItem("user"));
   const [notifications, setNotifications] = useState([]);
 
@@ -12,7 +13,7 @@ function Notifications() {
 
   const fetchNotifications = async () => {
     const res = await fetch(
-      `http://localhost:8080/users/notifications?userId=${user.id}`
+      `${API}/users/notifications?userId=${user.id}`
     );
 
     const data = await res.json();

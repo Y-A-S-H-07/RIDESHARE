@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import { FaBell, FaWallet } from "react-icons/fa";
 
 function Navbar() {
+  const API = process.env.REACT_APP_API_URL;
 
   const playSound = () => {
     const audio = new Audio("/notification.mp3");
     audio.play();
   };
+
 
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
@@ -30,7 +32,7 @@ function Navbar() {
   const fetchWallet = async () => {
     try {
       const res = await fetch(
-        `http://localhost:8080/users/wallet?userId=${user.id}`
+        `${API}/users/wallet?userId=${user.id}`
       );
       const data = await res.json();
       setBalance(data.balance);
@@ -51,7 +53,7 @@ function Navbar() {
   const fetchNotifications = async () => {
     try {
       const res = await fetch(
-        `http://localhost:8080/users/notifications?userId=${user.id}`
+        `${API}/users/notifications?userId=${user.id}`
       );
 
       const data = await res.json();
@@ -88,7 +90,7 @@ function Navbar() {
           {/* LEFT */}
           <h2
             className="text-lg font-semibold text-gray-900 cursor-pointer"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/user-dashboard")}
           >
             RideShare
           </h2>

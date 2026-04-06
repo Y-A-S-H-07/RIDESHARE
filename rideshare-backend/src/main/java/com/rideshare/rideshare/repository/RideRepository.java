@@ -3,6 +3,11 @@ package com.rideshare.rideshare.repository;
 import com.rideshare.rideshare.model.Ride;
 import com.rideshare.rideshare.model.RideStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
 import java.util.List;
 
 public interface RideRepository extends JpaRepository<Ride, Long> {
@@ -17,6 +22,18 @@ public interface RideRepository extends JpaRepository<Ride, Long> {
 
     boolean existsByDriverIdAndStatusIn(Long driverId, List<RideStatus> statuses);
 
-    // ✅ ADD THIS
+    
     boolean existsByHostIdAndStatusIn(Long hostId, List<RideStatus> statuses);
+
+
+
+    @Query("SELECT r FROM Ride r WHERE " +
+        "LOWER(r.source) LIKE LOWER(CONCAT('%', :source, '%')) AND " +
+        "LOWER(r.destination) LIKE LOWER(CONCAT('%', :destination, '%')) AND " +
+        "r.status = :status")
+    List<Ride> searchFlexible(
+            @Param("source") String source,
+            @Param("destination") String destination,
+            @Param("status") RideStatus status
+    );
 }

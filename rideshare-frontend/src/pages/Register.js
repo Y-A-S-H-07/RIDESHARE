@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Register() {
+  const API = process.env.REACT_APP_API_URL;
+
   const [role, setRole] = useState("USER");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -16,8 +18,8 @@ function Register() {
   const register = async () => {
     const url =
       role === "DRIVER"
-        ? "http://localhost:8080/drivers/register"
-        : "http://localhost:8080/users/register";
+        ? `${API}/drivers/register`
+        : `${API}/users/register`;
 
     try {
       const res = await fetch(url, {

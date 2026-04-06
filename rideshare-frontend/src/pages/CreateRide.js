@@ -1,8 +1,13 @@
 import React, { useState } from "react";
 import Navbar from "../components/Navbar";
 import toast from "react-hot-toast";
+import { useEffect } from "react";
 
 function CreateRide() {
+
+
+
+  const API = process.env.REACT_APP_API_URL;
   const user = JSON.parse(localStorage.getItem("user"));
 
   const [source, setSource] = useState("");
@@ -50,7 +55,7 @@ function CreateRide() {
     try {
       for (let type of types) {
         const res = await fetch(
-          `http://localhost:8080/rides/estimate?source=${source}&destination=${destination}&vehicleType=${type}`
+          `${API}/rides/estimate?source=${source}&destination=${destination}&vehicleType=${type}`
         );
 
         const data = await res.json();
@@ -77,7 +82,7 @@ function CreateRide() {
     }
 
     try {
-      const res = await fetch("http://localhost:8080/rides/create", {
+      const res = await fetch(`${API}/rides/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -95,10 +100,24 @@ function CreateRide() {
       toast.success(
         `Ride Created! ₹${data.totalFare.toFixed(2)} • ${data.distance.toFixed(1)} km`
       );
+      setHasActiveRide(true);
     } catch (err) {
       toast.error("Error creating ride");
     }
   };
+
+  useEffect(() => {
+    fetch(`${API}/rides/all`)
+      .then(res => res.json())
+      .then(data => {
+        const active = data.some(
+          r =>
+            r.host?.id === user.id &&
+            ["CREATED", "ACCEPTED", "STARTED"].includes(r.status)
+        );
+        setHasActiveRide(active);
+      });
+  }, []);
 
   return (
     <>
@@ -221,10 +240,15 @@ function CreateRide() {
 
             {/* CREATE */}
             <button
-              className="w-full bg-gray-900 text-white py-2 rounded-md hover:bg-black transition active:scale-95"
+              disabled={hasActiveRide}
+              className={`w-full py-2 rounded-md text-white ${
+                hasActiveRide
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gray-900 hover:bg-black"
+              }`}
               onClick={createRide}
             >
-              Create Ride
+              {hasActiveRide ? "Active Ride Exists" : "Create Ride"}
             </button>
 
           </div>

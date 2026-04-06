@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import toast from "react-hot-toast";
 
 function DriverRideDetails() {
+  const API = process.env.REACT_APP_API_URL;
   const { rideId } = useParams();
   const navigate = useNavigate();
 
@@ -12,7 +13,7 @@ function DriverRideDetails() {
   // fetch ride details
   const fetchRide = async () => {
     try {
-      const res = await fetch("http://localhost:8080/rides/all");
+      const res = await fetch(`${API}/rides/all`);
       const data = await res.json();
 
       const currentRide = data.find(
@@ -30,7 +31,7 @@ function DriverRideDetails() {
   }, []);
 
   const arrived = async () => {
-    await fetch(`http://localhost:8080/rides/arrived?rideId=${rideId}`, {
+    await fetch(`${API}/rides/arrived?rideId=${rideId}`, {
       method: "POST",
     });
     toast.success("Arrived at pickup");
@@ -38,7 +39,7 @@ function DriverRideDetails() {
   };
 
   const startRide = async () => {
-    await fetch(`http://localhost:8080/rides/start?rideId=${rideId}`, {
+    await fetch(`${API}/rides/start?rideId=${rideId}`, {
       method: "POST",
     });
     toast.success("Ride started");
@@ -46,7 +47,7 @@ function DriverRideDetails() {
   };
 
   const completeRide = async () => {
-    await fetch(`http://localhost:8080/rides/complete?rideId=${rideId}`, {
+    await fetch(`${API}/rides/complete?rideId=${rideId}`, {
       method: "POST",
     });
     toast.success("Ride completed");

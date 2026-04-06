@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import toast from "react-hot-toast";
 
 function DriverDashboard() {
+  const API = process.env.REACT_APP_API_URL;
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -34,7 +35,7 @@ function DriverDashboard() {
   }, [driverId]);
 
   const fetchActiveRide = async () => {
-    const res = await fetch("http://localhost:8080/rides/all");
+    const res = await fetch(`${API}/rides/all`);
     const data = await res.json();
 
     const current = data.find(
@@ -49,7 +50,7 @@ function DriverDashboard() {
   const fetchDriver = async () => {
     try {
       const res = await fetch(
-        `http://localhost:8080/drivers/by-user?userId=${user.id}`
+        `${API}/drivers/by-user?userId=${user.id}`
       );
 
       const data = await res.json();
@@ -65,7 +66,7 @@ function DriverDashboard() {
 
   // check if driver already has an active ride
   const checkActiveRide = async (driverId) => {
-    const res = await fetch("http://localhost:8080/rides/all");
+    const res = await fetch(`${API}/rides/all`);
     const data = await res.json();
 
     const active = data.find(
@@ -81,7 +82,7 @@ function DriverDashboard() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8080/rides/available");
+      const res = await fetch(`${API}/rides/available`);
       const data = await res.json();
       setRides(data);
     } catch (err) {
@@ -94,7 +95,7 @@ function DriverDashboard() {
   const acceptRide = async (rideId) => {
     try {
       const response = await fetch(
-        `http://localhost:8080/rides/accept?rideId=${rideId}&driverId=${driverId}`,
+        `${API}/rides/accept?rideId=${rideId}&driverId=${driverId}`,
         { method: "POST" }
       );
 
@@ -112,7 +113,7 @@ function DriverDashboard() {
   };
 
   const startRide = async (rideId) => {
-    await fetch(`http://localhost:8080/rides/start?rideId=${rideId}`, {
+    await fetch(`${API}/rides/start?rideId=${rideId}`, {
       method: "POST",
     });
 
@@ -122,7 +123,7 @@ function DriverDashboard() {
   };
 
   const completeRide = async (rideId) => {
-    await fetch(`http://localhost:8080/rides/complete?rideId=${rideId}`, {
+    await fetch(`${API}/rides/complete?rideId=${rideId}`, {
       method: "POST",
     });
 

@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 
 function History() {
+
+  const API = process.env.REACT_APP_API_URL;
+
   const user = JSON.parse(localStorage.getItem("user"));
   const [rides, setRides] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,7 +15,7 @@ function History() {
 
   const fetchRides = async () => {
     try {
-      const res = await fetch("http://localhost:8080/rides/all");
+      const res = await fetch(`${API}/rides/all`);
       const data = await res.json();
 
       const myRides = data.filter(

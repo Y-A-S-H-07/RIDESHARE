@@ -15,7 +15,6 @@ import com.rideshare.rideshare.model.TransactionType;
 
 @RestController
 @RequestMapping("/wallet")
-@CrossOrigin(origins = "http://localhost:3000")
 public class WalletController {
 
     @Autowired

@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import toast from "react-hot-toast";
 
 function Wallet() {
+  const API = process.env.REACT_APP_API_URL;
   const user = JSON.parse(localStorage.getItem("user"));
 
   const [amount, setAmount] = useState("");
@@ -12,7 +13,7 @@ function Wallet() {
 
   const fetchWallet = async () => {
     const res = await fetch(
-      `http://localhost:8080/users/wallet?userId=${user.id}`
+      `${API}/users/wallet?userId=${user.id}`
     );
     const data = await res.json();
     setBalance(data.balance);
@@ -20,7 +21,7 @@ function Wallet() {
 
   const fetchTransactions = async () => {
     const res = await fetch(
-      `http://localhost:8080/users/transactions?userId=${user.id}`
+      `${API}/users/transactions?userId=${user.id}`
     );
     const data = await res.json();
     setTransactions(data);
@@ -40,7 +41,7 @@ function Wallet() {
       return;
     }
 
-    await fetch("http://localhost:8080/wallet/add", {
+    await fetch(`${API}/wallet/add`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

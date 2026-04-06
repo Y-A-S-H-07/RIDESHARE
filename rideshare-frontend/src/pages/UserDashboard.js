@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 
 function UserDashboard() {
+  const API = process.env.REACT_APP_API_URL;
+
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -16,12 +18,16 @@ function UserDashboard() {
 
   const fetchMyRides = async () => {
     try {
-      const res = await fetch("http://localhost:8080/rides/all");
+      const res = await fetch(`${API}/rides/all`);
       const data = await res.json();
 
-      const filtered = data.filter(
-        (ride) => ride.host?.id === user.id
-      );
+      const filtered = data
+      .filter(
+        (ride) =>
+          ride.host?.id === user.id &&
+          ride.status !== "COMPLETED"  
+      )
+      .sort((a, b) => b.id - a.id); // newest first
 
       setMyRides(filtered);
     } catch (err) {
@@ -35,7 +41,7 @@ function UserDashboard() {
 
   const fetchRequests = async (rideId) => {
     try {
-      const res = await fetch("http://localhost:8080/rides/all");
+      const res = await fetch(`${API}/rides/all`);
       const data = await res.json();
 
       const ride = data.find((r) => r.id === rideId);
@@ -58,7 +64,7 @@ function UserDashboard() {
   const acceptRequest = async (rideId, userId) => {
     try {
       await fetch(
-        `http://localhost:8080/rides/accept-request?rideId=${rideId}&userId=${userId}&hostId=${user.id}`,
+        `${API}/rides/accept-request?rideId=${rideId}&userId=${userId}&hostId=${user.id}`,
         { method: "POST" }
       );
       fetchMyRides();
@@ -70,7 +76,7 @@ function UserDashboard() {
   const rejectRequest = async (rideId, userId) => {
     try {
       await fetch(
-        `http://localhost:8080/rides/reject-request?rideId=${rideId}&userId=${userId}&hostId=${user.id}`,
+        `${API}/rides/reject-request?rideId=${rideId}&userId=${userId}&hostId=${user.id}`,
         { method: "POST" }
       );
       fetchMyRides();
